@@ -7,6 +7,7 @@
 // @grant       GM_getValue
 // @grant		GM_log
 // @grant		GM_listValues
+// @grant		GM_deleteValue
 // ==/UserScript==
 
 /*
@@ -175,7 +176,7 @@ var LawBlog = function() {
 		var num = e ? e.innerHTML.trim().match( /^[0-9]+/ ) : 0;
 		
 		if( num > 0 && persist ) {
-			this.setCommentCountForArticle( document.URL, num );
+			this.persistCommentCountForArticle( document.URL, num );
 		}
 		
 		if( e ) {
@@ -197,7 +198,15 @@ var LawBlog = function() {
 	 */
 	this.getCommentCountForArticle = function( rawURI ) {
 		var nrmURI = normalizeArticleURI( rawURI );
-		return GM_getValue( nrmURI, -1 ); 
+		var value  = -1;
+		var obj    =  GM_getValue( nrmURI, value );
+		if( -1 != obj ) {
+			obj = JSON.parse( obj );
+			value = obj.count;
+		}
+
+		return value;
+
 	}
 	
 	/**
@@ -206,9 +215,15 @@ var LawBlog = function() {
 	 * @param string rawURI
 	 * @param int count
 	 */
-	this.setCommentCountForArticle = function( rawURI, count ) {
-		var nrmURI = normalizeArticleURI( rawURI );
-		GM_setValue( nrmURI, count );
+	this.persistCommentCountForArticle = function( rawURI, count ) {
+		var nrmURI	= normalizeArticleURI( rawURI );
+		var now = new Date();
+		var value	= {
+			'count' : count,
+			'changed' : now.getTime()
+		};
+		GM_log( JSON.stringify( value ) );
+		GM_setValue( nrmURI, JSON.stringify( value ) );
 	}
 	
 	/**
@@ -227,56 +242,89 @@ var LawBlog = function() {
 				
 	}
 	
-	
-	
 	/**
 	 * add persisted number of comments
 	 */
 	this.addCommentCount = function() {
 		
-		var href, num, diff;
+		var numCurrent, numPersisted, numDiff, txtDiff;
 		
 		for( var i=0; i<document.links.length; i++ ) {
-			href = document.links[i].href;
-			
-			if( href.match( /\/#comments$/ ) ) {
-				num = this.getCommentCountForArticle( href );
+
+			if( document.links[i].href.match( /\/#comments$/ ) ) {
+				numCurrent   = document.links[i].firstChild.innerHTML.match( /^[0-9]+/ );
+				numPersisted = this.getCommentCountForArticle( document.links[i].href );
+				numDiff      = -1 == numPersisted ? 'n/a' : numCurrent - numPersisted;
 				
-				this.setCommentCountForArticle( href, num );
-				
-				diff = -1 == num ? 'n/a' : '--';
-				num = -1 == num ? 'n/a' : num;
-				
-				
-				
-				document.links[i].innerHTML += 
-					'&nbsp;|&nbsp;' +
-					num + '&nbsp;|&nbsp;' + diff;
-				
+				if( numDiff == 0 ) {
+					txtDiff = '+/- 0';
+				}
+				else if( numDiff > 0 ) {
+					txtDiff = '+' + numDiff;
+				}
+				else {
+					txtDiff = numDiff;
+				}
+				document.links[i].innerHTML += '&nbsp;[' + txtDiff + ']';
+			}
+		}
+		return this;
+	}
+
+	this.deleteAllCommentCount = function() {
+
+		if( confirm( 'Delete all comment keys?' ) ) {
+			for each ( var val in GM_listValues() ) {
+				GM_log( 'Delete ' + val + ' -> ' + GM_deleteValue( val ) );
 			}
 		}
 		
-		return this;
-		
 	}
 	
+	this.listStorage = function() {
+		var out = 'Storage:\n';
+		var num = 0;
+		var value;
+		var type;
+		for each ( var key in GM_listValues() ) {
+			value = GM_getValue( key );
+			type = typeof value;
+			++num;
+			out += ' ' + num + ' ' + key + ' : (' + type + ') ' + value + '\n';
+		}
+		GM_log( out );
+	}
+
+	this.main = function() {
+		if( this.PAGE_TYPE_INDEX == this.detectPageType() ) {
+			GM_log( '-- index' );
+			this.foldArticles();
+			this.addCommentCount();
+		}
+		else if( this.PAGE_TYPE_ARTICLE == this.detectPageType() ) {
+			GM_log( '-- article' );
+			this.getCommentCountForDocument();
+		}
+		else {
+			GM_log( '-- undefined: ' + 	this.detectPageType() );
+		}
+		this.listStorage();
+	}
+
 }
 
 var lb = new LawBlog();
+lb.main();
+// lb.deleteAllCommentCount();
+//return;
 
 // var type = lb.detectPageType();
-if( lb.PAGE_TYPE_INDEX == lb.detectPageType() ) {
-	GM_log( '-- index' );
-	lb.foldArticles().addCommentCount();
-}
-else if( lb.PAGE_TYPE_ARTICLE == lb.detectPageType() ) {
-	GM_log( '-- article' );
-	GM_log( lb.getCommentCountForDocument() );
-}
 
+
+/*
 var out = '';
 for each ( var val in GM_listValues() ) {
 	out += val + ' = ' + GM_getValue( val ) + '\n';
 }
 GM_log( out );
-GM_log( GM_listValues().join( '\n' ) );
+*/
