@@ -104,6 +104,36 @@ unsafeWindow.addMarkup = function( txtarea, text ) {
 }
 
 /**
+ * check form
+ *
+ * Will check the comment form before submitting it.
+ * In case any of the mandatory fields is empty the form will *not* be submitted.
+ *
+ * @param HTMLFormElement frm
+ * @return bool
+ */
+unsafeWindow.checkForm = function( frm ) {
+
+	var missing = new Array();
+
+	for( var i=0; i<frm.elements.length; i++ ) {
+		if( !frm.elements[i].value &&
+			frm.elements[i].hasAttribute( 'aria-required' ) &&
+			frm.elements[i].getAttribute( 'aria-required' ) == 'true'
+		){
+			missing.push( frm.elements[i].name );
+		}
+	}
+
+	if( missing.length > 0 ) {
+		alert( 'Das Formular ist unvollständig, bitte ausfüllen: \n\t- ' + missing.join( '\n\t- ' ) );
+	}
+
+	return missing.length == 0;
+
+}
+
+/**
  * The class holding LawBlog functions
  */
 var LawBlog = function() {
@@ -495,6 +525,13 @@ var LawBlog = function() {
 		GM_log( out );
 	}
 
+	this.addCommentFormSubmitCheck = function() {
+
+		document.getElementById( 'commentform' ).setAttribute( 'onsubmit', 'return checkForm( this )' );
+		return this;
+
+	}
+
 	/**
 	 * main
 	 *
@@ -511,7 +548,9 @@ var LawBlog = function() {
 			this.addCommentButtons();
 			this.addCommentPreview();
 			this.addCommentReadMarker();
+			this.addCommentFormSubmitCheck();
 			this.getCommentCountForDocument();
+
 
 		}
 		else {
