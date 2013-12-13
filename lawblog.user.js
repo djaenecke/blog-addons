@@ -236,7 +236,7 @@ var LawBlog = function() {
 	 * iterate over all articles, hide the article content and add a button in
 	 * the articles headline to toggle its visibility
 	 *
-	 * @return LawBlog
+	 * @return this
 	 */
 	this.foldArticles = function() {
 		var articles = document.getElementsByTagName( 'article' );
@@ -367,7 +367,7 @@ var LawBlog = function() {
 	 * pointing to an article and containing a comment count will given
 	 * additional information on the change in the number of comments
 	 *
-	 * @return LawBlog
+	 * @return this
 	 */
 	this.addCommentCount = function() {
 
@@ -420,7 +420,7 @@ var LawBlog = function() {
 	/**
 	 * add a preview box for new comments
 	 *
-	 * @return LawBlog
+	 * @return this
 	 */
 	this.addCommentPreview = function() {
 
@@ -455,7 +455,7 @@ var LawBlog = function() {
 	 * list all stored key-value pairs/**
 	 * add a preview box for new comments
 	 *
-	 * @return LawBlog
+	 * @return this
 	 */
 	this.addCommentButtons = function() {
 
@@ -489,6 +489,14 @@ var LawBlog = function() {
 		var relativeCommentIdx = 0;
 
 		/*
+		 * if the article was not accessed through the comment-link
+		 * we do not jump anywhere
+		 */
+		if( !unsafeWindow.document.URL.match( /#comments/ ) ) {
+			return this;
+		}
+
+		/*
 		 * no persisted data -> leave
 		 */
 		if( -1 === numPersisted ) {
@@ -506,7 +514,6 @@ var LawBlog = function() {
 
 
 		if( relativeCommentIdx < numCurrent ) {
-
 			var marker = document.createElement( 'div' );
 			marker.setAttribute( 'id', 'dCommentLastReadMarker' );
 			marker.innerHTML = '<strong>&#8595;&#8595;&#8595;</strong>&nbsp;neue Kommentare&nbsp;<strong>&#8595;&#8595;&#8595;</strong>';
@@ -540,6 +547,11 @@ var LawBlog = function() {
 		GM_log( out );
 	}
 
+	/**
+	 * add form check to comment form
+	 *
+	 * @return this
+	 */
 	this.addCommentFormSubmitCheck = function() {
 
 		document.getElementById( 'commentform' ).setAttribute( 'onsubmit', 'return checkForm( this )' );
