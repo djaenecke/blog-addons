@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name        lawblog.de - added usability
-// @namespace   de.wonko
+// @namespace   com.blog-addons
 // @include     http://www.lawblog.de/*
 // @version     1
 // @grant       GM_setValue
