@@ -291,18 +291,14 @@ LawBlog.prototype.getCommentCountForDocument = function( persist ) {
 
 	persist = persist || typeof persist === 'undefined';
 	var e = document.getElementById( 'comments-title' );
-	var num = e ? e.innerHTML.trim().match( /^[0-9]+/ ) : 0;
+	var num = e ? e.innerHTML.trim().replace( /\./, '' ).match( /^[0-9]+/ ) : 0;
 
 	if( num > 0 && persist ) {
 		this.persistCommentCountForArticle( document.URL, num );
 	}
 
-	if( e ) {
-		return e.innerHTML.trim().match( /^[0-9]+/ );
-	}
-	else {
-		return 0;
-	}
+	return num;
+
 
 }
 
@@ -379,7 +375,7 @@ LawBlog.prototype.addCommentCount = function() {
 		if( document.links[i].href.match( /\/#comments$/ ) &&
 			!document.links[i].title.match( /^Seite #/ )
 		) {
-			numCurrent   = document.links[i].firstChild.innerHTML.match( /^[0-9]+/ );
+			numCurrent   = document.links[i].firstChild.innerHTML.replace( /\./, '' ).match( /^[0-9]+/ );
 			numPersisted = this.getPersistedCommentCountForArticle( document.links[i].href );
 			numDiff      = -1 == numPersisted ? 'n/a' : numCurrent - numPersisted;
 
@@ -508,11 +504,9 @@ LawBlog.prototype.addCommentReadMarker = function() {
 	numPage = unsafeWindow.document.URL.match( /(comment-page-)(\d)/ );
 	numPage = null == numPage ? 1 : numPage[2];
 	pageMinId = (numPage - 1) * this.MAX_NUM_COMMENTS + 1;
-
 	relativeCommentIdx = numPersisted - pageMinId;
 
-
-	if( relativeCommentIdx < numCurrent ) {
+	if( relativeCommentIdx > 0 && relativeCommentIdx < numCurrent ) {
 		var marker = document.createElement( 'div' );
 		marker.setAttribute( 'id', 'dCommentLastReadMarker' );
 		marker.innerHTML = '<strong>&#8595;&#8595;&#8595;</strong>&nbsp;neue Kommentare&nbsp;<strong>&#8595;&#8595;&#8595;</strong>';
@@ -582,7 +576,7 @@ LawBlog.prototype.main = function() {
 	else {
 		GM_log( '-- undefined: ' + 	this.detectPageType() );
 	}
-	// this.listStorage();
+	 this.listStorage();
 }
 
 
