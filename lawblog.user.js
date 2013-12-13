@@ -403,7 +403,7 @@ var LawBlog = function() {
 						var lnk = document.links[i].cloneNode( true );
 						lnk.innerHTML = '[Seite #' + (s+1) + ']';
 						lnk.title = 'Seite #' + (s+1);
-						lnk.href=lnk.href.replace( /#comments$/, 'comment-page-' + (s+1) + '/#comments' );
+						lnk.href=lnk.href.replace( /#comments$/, 'comment-page-' + (s+1) + '/#co	mments' );
 						document.links[i].parentNode.innerHTML += '&nbsp;|&nbsp;';
 						document.links[i].parentNode.appendChild( lnk );
 
@@ -483,21 +483,36 @@ var LawBlog = function() {
 
 		var numPersisted = this.getPersistedCommentCountForArticle( unsafeWindow.document.URL );
 		var numCurrent   = this.getCommentCountForDocument( false );
+		var numPage = 0;
+		var pageMinId = 0;
+		var commentList = document.getElementById( 'comments' ).getElementsByTagName( 'ol' )[0].getElementsByTagName( 'li' );
+		var relativeCommentIdx = 0;
 
-		if( numPersisted > 0 && numPersisted < numCurrent ) {
+		/*
+		 * no persisted data -> leave
+		 */
+		if( -1 === numPersisted ) {
+			return this;
+		}
+
+		/*
+		 * detect on which sub-page we are (if any)
+		 */
+		numPage = unsafeWindow.document.URL.match( /(comment-page-)(\d)/ );
+		numPage = null == numPage ? 1 : numPage[2];
+		pageMinId = (numPage - 1) * this.MAX_NUM_COMMENTS + 1;
+
+		relativeCommentIdx = numPersisted - pageMinId;
+
+
+		if( relativeCommentIdx < numCurrent ) {
 
 			var marker = document.createElement( 'div' );
 			marker.setAttribute( 'id', 'dCommentLastReadMarker' );
-			marker.innerHTML = '----------| neue Kommentare |----------';
 			marker.innerHTML = '<strong>&#8595;&#8595;&#8595;</strong>&nbsp;neue Kommentare&nbsp;<strong>&#8595;&#8595;&#8595;</strong>';
 
-			var commentList = document.
-				getElementById( 'comments' ).
-				getElementsByTagName( 'ol' )[0].
-				getElementsByTagName( 'li' );
-
-			if( commentList.length >= numPersisted ) {
-				commentList[numPersisted-1].appendChild( marker );
+			if( commentList.length >= relativeCommentIdx ) {
+				commentList[relativeCommentIdx].appendChild( marker );
 				marker.scrollIntoView( true );
 				GM_addStyle( '#dCommentLastReadMarker { text-align: center; color: #ffffff; background-color: #ff0000; margin-top: 30px;}' );
 			}
