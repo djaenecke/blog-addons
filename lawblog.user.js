@@ -66,9 +66,6 @@ String.prototype.trim = function ( clist ) {
 	return this.ltrim().rtrim ();
 }
 
-
-
-
 /*
  * JS required for user interaction
  */
@@ -136,7 +133,7 @@ unsafeWindow.checkForm = function( frm ) {
 /**
  * The class holding LawBlog functions
  */
-var LawBlog = function() {
+LawBlog = function() {
 
 	/**
 	 * these are the different kinds of pages that can be found
@@ -156,437 +153,438 @@ var LawBlog = function() {
 	 */
 	this.page_type = null;
 
-	/**
-	 * detect on what type of page we are on
-	 *
-	 * there are three page types:
-	 *  - index pages, containing articles and links to these articles and
-	 *      their corresponding comments
-	 *  - article pages, containing one article and its related comments
-	 *  - other pages
-	 *
-	 * @return int
-	 */
-	this.detectPageType = function() {
+}
 
-		if( null == this.pageType ) {
+/**
+ * detect on what type of page we are on
+ *
+ * there are three page types:
+ *  - index pages, containing articles and links to these articles and
+ *      their corresponding comments
+ *  - article pages, containing one article and its related comments
+ *  - other pages
+ *
+ * @return int
+ */
+LawBlog.prototype.detectPageType = function() {
 
-			var pageURI = unsafeWindow.document.URL;
+	if( null == this.pageType ) {
 
-			if( pageURI.match(
-				/index\.php\/archives\/[12][0-9]{3}\/[0-9]{2}\/[0-9]{2}/ )
-			) {
-				this.pageType = this.PAGE_TYPE_ARTICLE;
-			}
-			else if( pageURI.match( /lawblog\.de\/$/ ) ||
-				pageURI.match( /index\.php\/page\/[0-9]+/ )
-			) {
-				this.pageType = this.PAGE_TYPE_INDEX;
-			}
-			else {
-				this.pageType = this.PAGE_TYPE_OTHER;
-			}
+		var pageURI = unsafeWindow.document.URL;
 
+		if( pageURI.match(
+			/index\.php\/archives\/[12][0-9]{3}\/[0-9]{2}\/[0-9]{2}/ )
+		) {
+			this.pageType = this.PAGE_TYPE_ARTICLE;
 		}
-
-		return this.pageType;
-
-	}
-
-	/**
-	 * create content-id from article-id
-	 *
-	 * @param string articleId
-	 * @return string
-	 */
-	this.getContentId = function( articleId ) {
-		return 'content-' + articleId;
-	}
-
-	/**
-	 * create link-id from article-id
-	 *
-	 * @param string articleId
-	 * @return string
-	 */
-	this.getLinkId = function( articleId ) {
-		return 'a-' + articleId;
-	}
-
-	/**
-	 * create HTML snippet
-	 * this HTML snippet will provide a base <a> element to toggle the
-	 * visibility of an article
-	 *
-	 * @param string articleId
-	 * @return string
-	 */
-	this.getToggleHTML = function( articleId ) {
-		return '<a ' +
-			'id="' + this.getLinkId( articleId ) + '" ' +
-			'href="#" ' +
-			'onclick="return toggleArticleVisibility( \'' +
-			articleId +
-			'\' )"></a>&nbsp;';
-	}
-
-	/**
-	 * fold all articles on the index page
-	 *
-	 * iterate over all articles, hide the article content and add a button in
-	 * the articles headline to toggle its visibility
-	 *
-	 * @return this
-	 */
-	this.foldArticles = function() {
-		var articles = document.getElementsByTagName( 'article' );
-		var article, header, content, articleId;
-
-		for( var i=0; i<articles.length; i++ ) {
-			article = articles[i];
-			articleId = article.getAttribute( 'id' );
-
-			header	= article.getElementsByTagName( 'h1' )[0];
-			content = article.getElementsByTagName( 'div' )[0];
-
-			header.innerHTML = this.getToggleHTML( articleId ) + header.innerHTML;
-			content.setAttribute( 'id', this.getContentId( articleId ) );
-			this.toggleArticleVisibility( articleId );
-
-		}
-
-		return this;
-
-	}
-
-	/**
-	 * toggle visibility of a single article
-	 *
-	 * @param string id
-	 */
-	this.toggleArticleVisibility = function( id ) {
-		var content = document.getElementById( this.getContentId( id ) );
-		var link = document.getElementById( 'a-' + id );
-
-		if( 'none' == content.style.display ) {
-			content.style.display = 'block';
-			link.innerHTML = '[-]';
+		else if( pageURI.match( /lawblog\.de\/$/ ) ||
+			pageURI.match( /index\.php\/page\/[0-9]+/ )
+		) {
+			this.pageType = this.PAGE_TYPE_INDEX;
 		}
 		else {
-			content.style.display = 'none';
-			link.innerHTML = '[+]';
+			this.pageType = this.PAGE_TYPE_OTHER;
 		}
 
 	}
 
-	/**
-	 * get number of comments for current article
-	 *
-	 * if the optional argument evaluates true and the number of comments is
-	 * greater than 0 it will be persisted
-	 *
-	 * @param bool persist (default: true)
-	 * @return int
-	 */
-	this.getCommentCountForDocument = function( persist ) {
+	return this.pageType;
 
-		persist = persist || typeof persist === 'undefined';
-		var e = document.getElementById( 'comments-title' );
-		var num = e ? e.innerHTML.trim().match( /^[0-9]+/ ) : 0;
+}
 
-		if( num > 0 && persist ) {
-			this.persistCommentCountForArticle( document.URL, num );
-		}
+/**
+ * create content-id from article-id
+ *
+ * @param string articleId
+ * @return string
+ */
+LawBlog.prototype.getContentId = function( articleId ) {
+	return 'content-' + articleId;
+}
 
-		if( e ) {
-			return e.innerHTML.trim().match( /^[0-9]+/ );
-		}
-		else {
-			return 0;
-		}
+/**
+ * create link-id from article-id
+ *
+ * @param string articleId
+ * @return string
+ */
+LawBlog.prototype.getLinkId = function( articleId ) {
+	return 'a-' + articleId;
+}
 
-	}
+/**
+ * create HTML snippet
+ * this HTML snippet will provide a base <a> element to toggle the
+ * visibility of an article
+ *
+ * @param string articleId
+ * @return string
+ */
+LawBlog.prototype.getToggleHTML = function( articleId ) {
+	return '<a ' +
+		'id="' + this.getLinkId( articleId ) + '" ' +
+		'href="#" ' +
+		'onclick="return toggleArticleVisibility( \'' +
+		articleId +
+		'\' )"></a>&nbsp;';
+}
 
-	/**
-	 * get persisted number of comments for this article
-	 *
-	 * will return -1 if no data was persisted for this article yet
-	 *
-	 * @param string rawURI
-	 * @return int
-	 */
-	this.getPersistedCommentCountForArticle = function( rawURI ) {
-		var nrmURI = normalizeArticleURI( rawURI );
-		var value  = -1;
-		var obj    =  GM_getValue( nrmURI, value );
-		if( -1 != obj ) {
-			obj = JSON.parse( obj );
-			value = obj.count;
-		}
+/**
+ * fold all articles on the index page
+ *
+ * iterate over all articles, hide the article content and add a button in
+ * the articles headline to toggle its visibility
+ *
+ * @return this
+ */
+LawBlog.prototype.foldArticles = function() {
+	var articles = document.getElementsByTagName( 'article' );
+	var article, header, content, articleId;
 
-		return value;
+	for( var i=0; i<articles.length; i++ ) {
+		article = articles[i];
+		articleId = article.getAttribute( 'id' );
 
-	}
+		header	= article.getElementsByTagName( 'h1' )[0];
+		content = article.getElementsByTagName( 'div' )[0];
 
-	/**
-	 * persist number of comments for this article
-	 *
-	 * @param string rawURI
-	 * @param int count
-	 */
-	this.persistCommentCountForArticle = function( rawURI, count ) {
-		var nrmURI	= normalizeArticleURI( rawURI );
-		var now = new Date();
-		var value	= {
-			'count' : count,
-			'changed' : now.getTime()
-		};
-		GM_setValue( nrmURI, JSON.stringify( value ) );
-	}
-
-	/**
-	 * get normalized article uri
-	 *
-	 * @param string rawURI
-	 * @return string
-	 */
-	normalizeArticleURI = function( rawURI ) {
-
-		var RE = /archives\/([0-9]{4})\/([0-9]{2})\/([0-9]{2})\/([^/]+)/g ;
-		var parts = RE.exec( rawURI );
-		parts.shift();
-		var nrm = parts.join( '-' );
-		return nrm;
+		header.innerHTML = this.getToggleHTML( articleId ) + header.innerHTML;
+		content.setAttribute( 'id', this.getContentId( articleId ) );
+		this.toggleArticleVisibility( articleId );
 
 	}
 
-	/**
-	 * add persisted number of comments
-	 *
-	 * this method will iterate all links in the current document. All links
-	 * pointing to an article and containing a comment count will given
-	 * additional information on the change in the number of comments
-	 *
-	 * @return this
-	 */
-	this.addCommentCount = function() {
+	return this;
 
-		var numCurrent, numPersisted, numDiff, txtDiff;
+}
 
-		var append = new Array();
+/**
+ * toggle visibility of a single article
+ *
+ * @param string id
+ */
+LawBlog.prototype.toggleArticleVisibility = function( id ) {
+	var content = document.getElementById( this.getContentId( id ) );
+	var link = document.getElementById( 'a-' + id );
 
-		for( var i=0; i<document.links.length; i++ ) {
-
-			if( document.links[i].href.match( /\/#comments$/ ) &&
-				!document.links[i].title.match( /^Seite #/ )
-			) {
-				numCurrent   = document.links[i].firstChild.innerHTML.match( /^[0-9]+/ );
-				numPersisted = this.getPersistedCommentCountForArticle( document.links[i].href );
-				numDiff      = -1 == numPersisted ? 'n/a' : numCurrent - numPersisted;
-
-				if( numDiff == 0 ) {
-					txtDiff = '&#177; 0';
-				}
-				else if( numDiff > 0 ) {
-					txtDiff = '+' + numDiff;
-				}
-				else {
-					txtDiff = numDiff;
-				}
-				document.links[i].innerHTML += '&nbsp;[' + txtDiff + ']';
-
-				if( numCurrent > this.MAX_NUM_COMMENTS ) {
-					var numPages = Math.ceil( numCurrent / this.MAX_NUM_COMMENTS );
-
-					for( var s=1; s<numPages; s++ ) {
-
-						var lnk = document.links[i].cloneNode( true );
-						lnk.innerHTML = '[Seite #' + (s+1) + ']';
-						lnk.title = 'Seite #' + (s+1);
-						lnk.href=lnk.href.replace( /#comments$/, 'comment-page-' + (s+1) + '/#co	mments' );
-						document.links[i].parentNode.innerHTML += '&nbsp;|&nbsp;';
-						document.links[i].parentNode.appendChild( lnk );
-
-					}
-
-				}
-
-			}
-		}
-		return this;
-
+	if( 'none' == content.style.display ) {
+		content.style.display = 'block';
+		link.innerHTML = '[-]';
 	}
-
-	/**
-	 * add a preview box for new comments
-	 *
-	 * @return this
-	 */
-	this.addCommentPreview = function() {
-
-		var divPreviewOuter = document.createElement( 'div' );
-		divPreviewOuter.setAttribute( 'id', 'dPreviewOuter' );
-
-		var divPreviewTitle = document.createElement( 'div' );
-		divPreviewTitle.setAttribute( 'id', 'dPreviewTitle' );
-		divPreviewTitle.innerHTML = 'Preview';
-
-		var divPreviewInner = document.createElement( 'div' );
-		divPreviewInner.setAttribute( 'id', 'dPreviewInner' );
-
-		var pPreview = document.createElement( 'p' );
-		pPreview.setAttribute( 'id', 'commentPreview' );
-
-		divPreviewOuter.appendChild( divPreviewTitle );
-		divPreviewOuter.appendChild( divPreviewInner );
-
-		divPreviewInner.appendChild( pPreview );
-
-		document.getElementById( 'commentform' ).appendChild( divPreviewOuter );
-
-		GM_addStyle( '#dPreviewTitle { white-space: pre; background-color: #ff0000; color: #ffffff; font-weight: bold; padding: 2px; }' );
-		document.getElementById( 'comment' ).setAttribute( 'onkeypress', 'showPreview( this.value )' );
-
-		return this;
-
-	}
-
-	/**
-	 * list all stored key-value pairs/**
-	 * add a preview box for new comments
-	 *
-	 * @return this
-	 */
-	this.addCommentButtons = function() {
-
-		var allowedMarkup = new Array( 'b', 'i', 'blockquote', 'strike' );
-
-		for( var i=0; i<allowedMarkup.length; i++ ) {
-
-			var myButton = document.createElement( 'input' );
-			with( myButton ) {
-				setAttribute( 'type', 'button' );
-				setAttribute( 'value', '<' + allowedMarkup[i] + '>' );
-				setAttribute( 'onclick', 'addMarkup( document.getElementById( "comment" ), "' + allowedMarkup[i] + '" )' );
-			}
-			document.getElementById( 'commentform' ).appendChild( myButton );
-
-		}
-
-		return this;
-	}
-
-	/**
-	 * add marker after last already read comment
-	 */
-	this.addCommentReadMarker = function() {
-
-		var numPersisted = this.getPersistedCommentCountForArticle( unsafeWindow.document.URL );
-		var numCurrent   = this.getCommentCountForDocument( false );
-		var numPage = 0;
-		var pageMinId = 0;
-		var commentList = document.getElementById( 'comments' ).getElementsByTagName( 'ol' )[0].getElementsByTagName( 'li' );
-		var relativeCommentIdx = 0;
-
-		/*
-		 * if the article was not accessed through the comment-link
-		 * we do not jump anywhere
-		 */
-		if( !unsafeWindow.document.URL.match( /#comments/ ) ) {
-			return this;
-		}
-
-		/*
-		 * no persisted data -> leave
-		 */
-		if( -1 === numPersisted ) {
-			return this;
-		}
-
-		/*
-		 * detect on which sub-page we are (if any)
-		 */
-		numPage = unsafeWindow.document.URL.match( /(comment-page-)(\d)/ );
-		numPage = null == numPage ? 1 : numPage[2];
-		pageMinId = (numPage - 1) * this.MAX_NUM_COMMENTS + 1;
-
-		relativeCommentIdx = numPersisted - pageMinId;
-
-
-		if( relativeCommentIdx < numCurrent ) {
-			var marker = document.createElement( 'div' );
-			marker.setAttribute( 'id', 'dCommentLastReadMarker' );
-			marker.innerHTML = '<strong>&#8595;&#8595;&#8595;</strong>&nbsp;neue Kommentare&nbsp;<strong>&#8595;&#8595;&#8595;</strong>';
-
-			if( commentList.length >= relativeCommentIdx ) {
-				commentList[relativeCommentIdx].appendChild( marker );
-				marker.scrollIntoView( true );
-				GM_addStyle( '#dCommentLastReadMarker { text-align: center; color: #ffffff; background-color: #ff0000; margin-top: 30px;}' );
-			}
-
-		}
-
-		return this;
-
-	}
-
-	/**
-	 * list all stored elements
-	 */
-	this.listStorage = function() {
-		var out = 'Storage:\n';
-		var num = 0;
-		var value;
-		var type;
-		for each ( var key in GM_listValues() ) {
-			value = GM_getValue( key );
-			type = typeof value;
-			++num;
-			out += ' ' + num + ' ' + key + ' : (' + type + ') ' + value + '\n';
-		}
-		GM_log( out );
-	}
-
-	/**
-	 * add form check to comment form
-	 *
-	 * @return this
-	 */
-	this.addCommentFormSubmitCheck = function() {
-
-		document.getElementById( 'commentform' ).setAttribute( 'onsubmit', 'return checkForm( this )' );
-		return this;
-
-	}
-
-	/**
-	 * main
-	 *
-	 * this is the main entry point for all the action
-	 */
-	this.main = function() {
-		if( this.PAGE_TYPE_INDEX == this.detectPageType() ) {
-			GM_log( '-- index' );
-			this.foldArticles();
-			this.addCommentCount();
-		}
-		else if( this.PAGE_TYPE_ARTICLE == this.detectPageType() ) {
-			GM_log( '-- article' );
-			this.addCommentButtons();
-			this.addCommentPreview();
-			this.addCommentReadMarker();
-			this.addCommentFormSubmitCheck();
-			this.getCommentCountForDocument();
-
-
-		}
-		else {
-			GM_log( '-- undefined: ' + 	this.detectPageType() );
-		}
-		// this.listStorage();
+	else {
+		content.style.display = 'none';
+		link.innerHTML = '[+]';
 	}
 
 }
+
+/**
+ * get number of comments for current article
+ *
+ * if the optional argument evaluates true and the number of comments is
+ * greater than 0 it will be persisted
+ *
+ * @param bool persist (default: true)
+ * @return int
+ */
+LawBlog.prototype.getCommentCountForDocument = function( persist ) {
+
+	persist = persist || typeof persist === 'undefined';
+	var e = document.getElementById( 'comments-title' );
+	var num = e ? e.innerHTML.trim().match( /^[0-9]+/ ) : 0;
+
+	if( num > 0 && persist ) {
+		this.persistCommentCountForArticle( document.URL, num );
+	}
+
+	if( e ) {
+		return e.innerHTML.trim().match( /^[0-9]+/ );
+	}
+	else {
+		return 0;
+	}
+
+}
+
+/**
+ * get persisted number of comments for this article
+ *
+ * will return -1 if no data was persisted for this article yet
+ *
+ * @param string rawURI
+ * @return int
+ */
+LawBlog.prototype.getPersistedCommentCountForArticle = function( rawURI ) {
+	var nrmURI = this.normalizeArticleURI( rawURI );
+	var value  = -1;
+	var obj    =  GM_getValue( nrmURI, value );
+	if( -1 != obj ) {
+		obj = JSON.parse( obj );
+		value = obj.count;
+	}
+
+	return value;
+
+}
+
+/**
+ * persist number of comments for this article
+ *
+ * @param string rawURI
+ * @param int count
+ */
+LawBlog.prototype.persistCommentCountForArticle = function( rawURI, count ) {
+	var nrmURI	= this.normalizeArticleURI( rawURI );
+	var now = new Date();
+	var value	= {
+		'count' : count,
+		'changed' : now.getTime()
+	};
+	GM_setValue( nrmURI, JSON.stringify( value ) );
+}
+
+/**
+ * get normalized article uri
+ *
+ * @param string rawURI
+ * @return string
+ */
+LawBlog.prototype.normalizeArticleURI = function( rawURI ) {
+
+	var RE = /archives\/([0-9]{4})\/([0-9]{2})\/([0-9]{2})\/([^/]+)/g ;
+	var parts = RE.exec( rawURI );
+	parts.shift();
+	var nrm = parts.join( '-' );
+	return nrm;
+
+}
+
+/**
+ * add persisted number of comments
+ *
+ * this method will iterate all links in the current document. All links
+ * pointing to an article and containing a comment count will given
+ * additional information on the change in the number of comments
+ *
+ * @return this
+ */
+LawBlog.prototype.addCommentCount = function() {
+
+	var numCurrent, numPersisted, numDiff, txtDiff;
+
+	var append = new Array();
+
+	for( var i=0; i<document.links.length; i++ ) {
+
+		if( document.links[i].href.match( /\/#comments$/ ) &&
+			!document.links[i].title.match( /^Seite #/ )
+		) {
+			numCurrent   = document.links[i].firstChild.innerHTML.match( /^[0-9]+/ );
+			numPersisted = this.getPersistedCommentCountForArticle( document.links[i].href );
+			numDiff      = -1 == numPersisted ? 'n/a' : numCurrent - numPersisted;
+
+			if( numDiff == 0 ) {
+				txtDiff = '&#177; 0';
+			}
+			else if( numDiff > 0 ) {
+				txtDiff = '+' + numDiff;
+			}
+			else {
+				txtDiff = numDiff;
+			}
+			document.links[i].innerHTML += '&nbsp;[' + txtDiff + ']';
+
+			if( numCurrent > this.MAX_NUM_COMMENTS ) {
+				var numPages = Math.ceil( numCurrent / this.MAX_NUM_COMMENTS );
+
+				for( var s=1; s<numPages; s++ ) {
+
+					var lnk = document.links[i].cloneNode( true );
+					lnk.innerHTML = '[Seite #' + (s+1) + ']';
+					lnk.title = 'Seite #' + (s+1);
+					lnk.href=lnk.href.replace( /#comments$/, 'comment-page-' + (s+1) + '/#co	mments' );
+					document.links[i].parentNode.innerHTML += '&nbsp;|&nbsp;';
+					document.links[i].parentNode.appendChild( lnk );
+
+				}
+
+			}
+
+		}
+	}
+	return this;
+
+}
+
+/**
+ * add a preview box for new comments
+ *
+ * @return this
+ */
+LawBlog.prototype.addCommentPreview = function() {
+
+	var divPreviewOuter = document.createElement( 'div' );
+	divPreviewOuter.setAttribute( 'id', 'dPreviewOuter' );
+
+	var divPreviewTitle = document.createElement( 'div' );
+	divPreviewTitle.setAttribute( 'id', 'dPreviewTitle' );
+	divPreviewTitle.innerHTML = 'Preview';
+
+	var divPreviewInner = document.createElement( 'div' );
+	divPreviewInner.setAttribute( 'id', 'dPreviewInner' );
+
+	var pPreview = document.createElement( 'p' );
+	pPreview.setAttribute( 'id', 'commentPreview' );
+
+	divPreviewOuter.appendChild( divPreviewTitle );
+	divPreviewOuter.appendChild( divPreviewInner );
+
+	divPreviewInner.appendChild( pPreview );
+
+	document.getElementById( 'commentform' ).appendChild( divPreviewOuter );
+
+	GM_addStyle( '#dPreviewTitle { white-space: pre; background-color: #ff0000; color: #ffffff; font-weight: bold; padding: 2px; }' );
+	document.getElementById( 'comment' ).setAttribute( 'onkeypress', 'showPreview( this.value )' );
+
+	return this;
+
+}
+
+/**
+ * list all stored key-value pairs/**
+ * add a preview box for new comments
+ *
+ * @return this
+ */
+LawBlog.prototype.addCommentButtons = function() {
+
+	var allowedMarkup = new Array( 'b', 'i', 'blockquote', 'strike' );
+
+	for( var i=0; i<allowedMarkup.length; i++ ) {
+
+		var myButton = document.createElement( 'input' );
+		with( myButton ) {
+			setAttribute( 'type', 'button' );
+			setAttribute( 'value', '<' + allowedMarkup[i] + '>' );
+			setAttribute( 'onclick', 'addMarkup( document.getElementById( "comment" ), "' + allowedMarkup[i] + '" )' );
+		}
+		document.getElementById( 'commentform' ).appendChild( myButton );
+
+	}
+
+	return this;
+}
+
+/**
+ * add marker after last already read comment
+ */
+LawBlog.prototype.addCommentReadMarker = function() {
+
+	var numPersisted = this.getPersistedCommentCountForArticle( unsafeWindow.document.URL );
+	var numCurrent   = this.getCommentCountForDocument( false );
+	var numPage = 0;
+	var pageMinId = 0;
+	var commentList = document.getElementById( 'comments' ).getElementsByTagName( 'ol' )[0].getElementsByTagName( 'li' );
+	var relativeCommentIdx = 0;
+
+	/*
+	 * if the article was not accessed through the comment-link
+	 * we do not jump anywhere
+	 */
+	if( !unsafeWindow.document.URL.match( /#comments/ ) ) {
+		return this;
+	}
+
+	/*
+	 * no persisted data -> leave
+	 */
+	if( -1 === numPersisted ) {
+		return this;
+	}
+
+	/*
+	 * detect on which sub-page we are (if any)
+	 */
+	numPage = unsafeWindow.document.URL.match( /(comment-page-)(\d)/ );
+	numPage = null == numPage ? 1 : numPage[2];
+	pageMinId = (numPage - 1) * this.MAX_NUM_COMMENTS + 1;
+
+	relativeCommentIdx = numPersisted - pageMinId;
+
+
+	if( relativeCommentIdx < numCurrent ) {
+		var marker = document.createElement( 'div' );
+		marker.setAttribute( 'id', 'dCommentLastReadMarker' );
+		marker.innerHTML = '<strong>&#8595;&#8595;&#8595;</strong>&nbsp;neue Kommentare&nbsp;<strong>&#8595;&#8595;&#8595;</strong>';
+
+		if( commentList.length >= relativeCommentIdx ) {
+			commentList[relativeCommentIdx].appendChild( marker );
+			marker.scrollIntoView( true );
+			GM_addStyle( '#dCommentLastReadMarker { text-align: center; color: #ffffff; background-color: #ff0000; margin-top: 30px;}' );
+		}
+
+	}
+
+	return this;
+
+}
+
+/**
+ * list all stored elements
+ */
+LawBlog.prototype.listStorage = function() {
+	var out = 'Storage:\n';
+	var num = 0;
+	var value;
+	var type;
+	for each ( var key in GM_listValues() ) {
+		value = GM_getValue( key );
+		type = typeof value;
+		++num;
+		out += ' ' + num + ' ' + key + ' : (' + type + ') ' + value + '\n';
+	}
+	GM_log( out );
+}
+
+/**
+ * add form check to comment form
+ *
+ * @return this
+ */
+LawBlog.prototype.addCommentFormSubmitCheck = function() {
+
+	document.getElementById( 'commentform' ).setAttribute( 'onsubmit', 'return checkForm( this )' );
+	return this;
+
+}
+
+/**
+ * main
+ *
+ * this is the main entry point for all the action
+ */
+LawBlog.prototype.main = function() {
+	if( this.PAGE_TYPE_INDEX == this.detectPageType() ) {
+		GM_log( '-- index' );
+		this.foldArticles();
+		this.addCommentCount();
+	}
+	else if( this.PAGE_TYPE_ARTICLE == this.detectPageType() ) {
+		GM_log( '-- article' );
+		this.addCommentButtons();
+		this.addCommentPreview();
+		this.addCommentReadMarker();
+		this.addCommentFormSubmitCheck();
+		this.getCommentCountForDocument();
+
+
+	}
+	else {
+		GM_log( '-- undefined: ' + 	this.detectPageType() );
+	}
+	// this.listStorage();
+}
+
 
 var lb = new LawBlog();
 lb.main();
