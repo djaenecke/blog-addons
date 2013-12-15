@@ -507,7 +507,7 @@ LawBlog.prototype.addCommentReadMarker = function() {
 			commentList[relativeCommentIdx].appendChild( marker );
 			GM_addStyle( '#dCommentLastReadMarker { text-align: center; color: #ffffff; background-color: #ff0000; margin-top: 30px;}' );
 		}
-		
+
 		/*
 		 * if the article was accessed through the comment-link
 		 * we jump to the marker
@@ -558,24 +558,20 @@ LawBlog.prototype.addCommentFormSubmitCheck = function() {
  */
 LawBlog.prototype.main = function() {
 	if( this.PAGE_TYPE_INDEX == this.detectPageType() ) {
-		GM_log( '-- index' );
 		this.foldArticles();
 		this.addCommentCount();
 	}
 	else if( this.PAGE_TYPE_ARTICLE == this.detectPageType() ) {
-		GM_log( '-- article' );
 		this.addCommentButtons();
 		this.addCommentPreview();
 		this.addCommentReadMarker();
 		this.addCommentFormSubmitCheck();
 		this.getCommentCountForDocument();
-
-
 	}
 	else {
 		GM_log( '-- undefined: ' + 	this.detectPageType() );
 	}
-	 this.listStorage();
+	// this.listStorage();
 }
 
 
