@@ -9,7 +9,78 @@
 // @grant		GM_listValues
 // @grant		GM_deleteValue
 // @grant		GM_addStyle
+// @grant		GM_registerMenuCommand
+// @require            https://raw.github.com/sizzlemctwizzle/GM_config/master/gm_config.js
 // ==/UserScript==
+
+GM_config.init({
+	'id': 'GM_config', 
+	'title': 'Lawblog Addon Options',
+	'fields': {
+		
+	// auto-fill for comment box
+		'Comment-Author': {
+			'type'   : 'text',
+			'label'  : 'Name', 
+			'labelPos': 'below',
+			'default': '',
+			'section': 'Absender-Daten für Kommentare'
+		},
+		'Comment-Email': { 
+			'type'   : 'text',
+			'label'  : 'Email-Adresse',
+			'labelPos': 'below',
+			'default': '',
+		},
+		'LawBlog.prototype.addCommentFormAutoFill': {
+			'type'   : 'checkbox',
+			'label'  : 'Immer automatisch ausfüllen',
+			'default': false,
+		},
+		
+	// toggle features for index page
+		'LawBlog.prototype.addCommentCount': {
+			'type'   : 'checkbox',
+			'label'  : 'Anzahl hinzugefügter Kommentare anzeigen',
+			'default': true,
+			'section': 'Features Index-Seite',
+		},
+		'LawBlog.prototype.foldArticles': {
+			'type'   : 'checkbox',
+			'label'  : 'Artikel einklappen',
+			'default': true,
+		},
+		
+	// toggle features for article page
+		'LawBlog.prototype.addCommentButtons': {
+			'type'   : 'checkbox',
+			'label'  : 'Buttons für Textauszeichnungen anzeigen',
+			'default': true,
+			'section': 'Features Artikel-/Kommentar-Seite',
+		},
+		'LawBlog.prototype.addCommentPreview': {
+			'type'   : 'checkbox',
+			'label'  : 'Vorschaubox einblenden',
+			'default': true,
+		},
+		'LawBlog.prototype.addCommentReadMarker': {
+			'type'   : 'checkbox',
+			'label'  : 'Markierung hinter zuletzt gelesenem Kommentar setzen',
+			'default': true,
+		},
+		'LawBlog.prototype.addCommentFormSubmitCheck': {
+			'type'   : 'checkbox',
+			'label'  : 'Kommentar-Formular vorm Senden auf Vollständigkeit prüfen',
+			'default': true,
+		},
+		
+	},
+	'events' : {
+		'open' : function() { 
+			document.getElementById( 'GM_config' ).style.zIndex = 99999; 
+		}
+	}
+});
 
 /*
  * some enhancements for String
@@ -238,6 +309,7 @@ LawBlog.prototype.getToggleHTML = function( articleId ) {
  * @return this
  */
 LawBlog.prototype.foldArticles = function() {
+	
 	var articles = document.getElementsByTagName( 'article' );
 	var article, header, content, articleId;
 
@@ -266,7 +338,11 @@ LawBlog.prototype.foldArticles = function() {
 LawBlog.prototype.toggleArticleVisibility = function( id ) {
 	var content = document.getElementById( this.getContentId( id ) );
 	var link = document.getElementById( 'a-' + id );
-
+/*
+	if( !GM_config.get( 'LawBlog.prototype.foldArticles' ) ) {
+		return this;
+	}
+*/	
 	if( 'none' == content.style.display ) {
 		content.style.display = 'block';
 		link.innerHTML = '[-]';
@@ -366,8 +442,11 @@ LawBlog.prototype.normalizeArticleURI = function( rawURI ) {
  */
 LawBlog.prototype.addCommentCount = function() {
 
+	if( !GM_config.get( 'LawBlog.prototype.addCommentCount' ) ) {
+		return this;
+	}
+	
 	var numCurrent, numPersisted, numDiff, txtDiff;
-
 	var append = new Array();
 
 	for( var i=0; i<document.links.length; i++ ) {
@@ -408,6 +487,7 @@ LawBlog.prototype.addCommentCount = function() {
 
 		}
 	}
+
 	return this;
 
 }
@@ -418,13 +498,17 @@ LawBlog.prototype.addCommentCount = function() {
  * @return this
  */
 LawBlog.prototype.addCommentPreview = function() {
-
+	
+	if( !GM_config.get( 'LawBlog.prototype.addCommentPreview' ) ) {
+		return this;
+	}
+	
 	var divPreviewOuter = document.createElement( 'div' );
 	divPreviewOuter.setAttribute( 'id', 'dPreviewOuter' );
 
 	var divPreviewTitle = document.createElement( 'div' );
 	divPreviewTitle.setAttribute( 'id', 'dPreviewTitle' );
-	divPreviewTitle.innerHTML = 'Preview';
+	divPreviewTitle.innerHTML = 'Vorschau';
 
 	var divPreviewInner = document.createElement( 'div' );
 	divPreviewInner.setAttribute( 'id', 'dPreviewInner' );
@@ -438,10 +522,13 @@ LawBlog.prototype.addCommentPreview = function() {
 	divPreviewInner.appendChild( pPreview );
 
 	document.getElementById( 'commentform' ).appendChild( divPreviewOuter );
+	with( document.getElementById( 'comment' ) ) {
+		setAttribute( 'onkeypress', 'showPreview( this.value )' );
+		setAttribute( 'onchange', 'showPreview( this.value )' );
+		setAttribute( 'onblur', 'showPreview( this.value )' );
+	}
 
-	GM_addStyle( '#dPreviewTitle { white-space: pre; background-color: #ff0000; color: #ffffff; font-weight: bold; padding: 2px; }' );
-	document.getElementById( 'comment' ).setAttribute( 'onkeypress', 'showPreview( this.value )' );
-
+	unsafeWindow.showPreview( document.getElementById( 'comment' ).value );
 	return this;
 
 }
@@ -454,6 +541,10 @@ LawBlog.prototype.addCommentPreview = function() {
  */
 LawBlog.prototype.addCommentButtons = function() {
 
+	if( !GM_config.get( 'LawBlog.prototype.addCommentButtons' ) ) {
+		return this;
+	}
+	
 	var allowedMarkup = new Array( 'b', 'i', 'blockquote', 'strike' );
 
 	for( var i=0; i<allowedMarkup.length; i++ ) {
@@ -475,7 +566,11 @@ LawBlog.prototype.addCommentButtons = function() {
  * add marker after last already read comment
  */
 LawBlog.prototype.addCommentReadMarker = function() {
-
+	
+	if( !GM_config.get( 'LawBlog.prototype.addCommentReadMarker' ) ) {
+		return this;
+	}
+	
 	var numPersisted = this.getPersistedCommentCountForArticle( unsafeWindow.document.URL );
 	var numCurrent   = this.getCommentCountForDocument( false );
 	var numPage = 0;
@@ -505,7 +600,7 @@ LawBlog.prototype.addCommentReadMarker = function() {
 
 		if( commentList.length >= relativeCommentIdx ) {
 			commentList[relativeCommentIdx].appendChild( marker );
-			GM_addStyle( '#dCommentLastReadMarker { text-align: center; color: #ffffff; background-color: #ff0000; margin-top: 30px;}' );
+			
 		}
 
 		/*
@@ -540,15 +635,48 @@ LawBlog.prototype.listStorage = function() {
 }
 
 /**
+ * auto-fill comment form
+ *
+ * @return this
+ */
+LawBlog.prototype.addCommentFormAutoFill = function() {
+	
+	if( !GM_config.get( 'LawBlog.prototype.addCommentFormAutoFill' ) ) {
+		return this;
+	}
+	
+	var commentAuthor = GM_config.get( 'Comment-Author' );
+	var commentEmail = GM_config.get( 'Comment-Email' );
+	
+	if( commentAuthor ) {
+		document.getElementById( 'author' ).value = commentAuthor;	
+	}
+	if( commentEmail ) {
+		document.getElementById( 'email' ).value = commentEmail;
+	}
+
+	return this;
+
+}
+
+/**
  * add form check to comment form
  *
  * @return this
  */
 LawBlog.prototype.addCommentFormSubmitCheck = function() {
+	
+	if( !GM_config.get( 'LawBlog.prototype.addCommentFormSubmitCheck' ) ) {
+		return this;
+	}
 
 	document.getElementById( 'commentform' ).setAttribute( 'onsubmit', 'return checkForm( this )' );
 	return this;
 
+}
+
+LawBlogOptions = function() {
+	GM_config.open();
 }
 
 /**
@@ -557,6 +685,12 @@ LawBlog.prototype.addCommentFormSubmitCheck = function() {
  * this is the main entry point for all the action
  */
 LawBlog.prototype.main = function() {
+	
+	GM_registerMenuCommand( 'Lawblog-Addons -> Options', LawBlogOptions );
+	GM_addStyle( '#dPreviewTitle { white-space: pre; background-color: #000080; color: #ffffff; font-weight: bold; padding: 2px; padding-left: 20px; }' );
+	GM_addStyle( '#dPreviewOuter { border: 3px #000080 outset; }' );
+	GM_addStyle( '#dCommentLastReadMarker { text-align: center; color: #ffffff; background-color: #ff0000; margin-top: 30px;}' );
+	
 	if( this.PAGE_TYPE_INDEX == this.detectPageType() ) {
 		this.foldArticles();
 		this.addCommentCount();
@@ -566,14 +700,16 @@ LawBlog.prototype.main = function() {
 		this.addCommentPreview();
 		this.addCommentReadMarker();
 		this.addCommentFormSubmitCheck();
+		this.addCommentFormAutoFill();
 		this.getCommentCountForDocument();
 	}
 	else {
 		GM_log( '-- undefined: ' + 	this.detectPageType() );
 	}
-	// this.listStorage();
+
 }
 
 
 var lb = new LawBlog();
 lb.main();
+
