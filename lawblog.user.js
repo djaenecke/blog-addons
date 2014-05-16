@@ -73,6 +73,11 @@ GM_config.init({
 			'label'  : 'Kommentar-Formular vorm Senden auf Vollständigkeit prüfen',
 			'default': true,
 		},
+		'LawBlog.prototype.highlightOwnComment': {
+			'type'   : 'checkbox',
+			'label'  : 'Eigene Kommentare hervorheben (<em>Name</em> muss angegeben sein)',
+			'default': true,
+		},
 		
 	},
 	'events' : {
@@ -467,8 +472,13 @@ LawBlog.prototype.addCommentCount = function() {
 			else {
 				txtDiff = numDiff;
 			}
-			document.links[i].innerHTML += '&nbsp;[' + txtDiff + ']';
 
+			if( numDiff > 0 && numDiff != 'n/a' ) {
+				document.links[i].className += ' messageCountChanged';
+			}
+
+			document.links[i].innerHTML += '&nbsp;[' + txtDiff + ']';
+/*
 			if( numCurrent > this.MAX_NUM_COMMENTS ) {
 				var numPages = Math.ceil( numCurrent / this.MAX_NUM_COMMENTS );
 
@@ -484,6 +494,8 @@ LawBlog.prototype.addCommentCount = function() {
 				}
 
 			}
+			
+*/
 
 		}
 	}
@@ -546,6 +558,7 @@ LawBlog.prototype.addCommentButtons = function() {
 	}
 	
 	var allowedMarkup = new Array( 'b', 'i', 'blockquote', 'strike' );
+	var myButtonDiv = document.createElement( 'div' );
 
 	for( var i=0; i<allowedMarkup.length; i++ ) {
 
@@ -554,12 +567,46 @@ LawBlog.prototype.addCommentButtons = function() {
 			setAttribute( 'type', 'button' );
 			setAttribute( 'value', '<' + allowedMarkup[i] + '>' );
 			setAttribute( 'onclick', 'addMarkup( document.getElementById( "comment" ), "' + allowedMarkup[i] + '" )' );
+			className = 'buttonAssignMarkup';
 		}
-		document.getElementById( 'commentform' ).appendChild( myButton );
+		myButtonDiv.appendChild( myButton );
+		// document.getElementById( 'commentform' ).appendChild( myButton );
 
 	}
 
+	document.getElementById( 'commentform' ).appendChild( myButtonDiv );
+
 	return this;
+}
+
+/**
+ * highlight all your own comments
+ *
+ * @return this
+ */
+LawBlog.prototype.highlightOwnComment = function() {
+	
+	if( !GM_config.get( 'LawBlog.prototype.highlightOwnComment' ) ) {
+		return this;
+	}
+	
+	var authorMe = GM_config.get( 'Comment-Author', -1 );
+	
+	var commentList = document.getElementById( 'comments' ).getElementsByTagName( 'ol' )[0].getElementsByTagName( 'li' );
+	var commentId;
+	var authorTag;
+	var authorName;
+	for( var i=0; i<commentList.length; i++ ) {
+		
+		commentId = commentList[i].getAttribute( 'id' ).substr( 11 );
+		authorTag = document.getElementById( 'comment-' + commentId + '-authorname' );
+		authorName = authorTag ? authorTag.innerHTML.trim() : 'n/a';
+		
+		if( authorName == authorMe ) {
+			commentList[i].className += ' highlightComment';	
+		}
+		
+	}
 }
 
 /**
@@ -690,12 +737,16 @@ LawBlog.prototype.main = function() {
 	GM_addStyle( '#dPreviewTitle { white-space: pre; background-color: #000080; color: #ffffff; font-weight: bold; padding: 2px; padding-left: 20px; }' );
 	GM_addStyle( '#dPreviewOuter { border: 3px #000080 outset; }' );
 	GM_addStyle( '#dCommentLastReadMarker { text-align: center; color: #ffffff; background-color: #ff0000; margin-top: 30px;}' );
+	GM_addStyle( '.messageCountChanged { color: #ff0000; }' );
+	GM_addStyle( 'input.buttonAssignMarkup { font-size: 11px; width: 80px; }' );
+	GM_addStyle( '.highlightComment { background-color: rgb(185, 197, 214); }' );
 	
 	if( this.PAGE_TYPE_INDEX == this.detectPageType() ) {
 		this.foldArticles();
 		this.addCommentCount();
 	}
 	else if( this.PAGE_TYPE_ARTICLE == this.detectPageType() ) {
+		this.highlightOwnComment();
 		this.addCommentButtons();
 		this.addCommentPreview();
 		this.addCommentReadMarker();
