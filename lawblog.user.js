@@ -340,11 +340,7 @@ LawBlog.prototype.foldArticles = function() {
 LawBlog.prototype.toggleArticleVisibility = function( id ) {
 	var content = document.getElementById( this.getContentId( id ) );
 	var link = document.getElementById( 'a-' + id );
-/*
-	if( !GM_config.get( 'LawBlog.prototype.foldArticles' ) ) {
-		return this;
-	}
-*/	
+
 	if( 'none' == content.style.display ) {
 		content.style.display = 'block';
 		link.innerHTML = '[-]';
@@ -376,7 +372,6 @@ LawBlog.prototype.getCommentCountForDocument = function( persist ) {
 	}
 
 	return num;
-
 
 }
 
@@ -475,24 +470,6 @@ LawBlog.prototype.addCommentCount = function() {
 			}
 
 			document.links[i].innerHTML += '&nbsp;[' + txtDiff + ']';
-/*
-			if( numCurrent > this.MAX_NUM_COMMENTS ) {
-				var numPages = Math.ceil( numCurrent / this.MAX_NUM_COMMENTS );
-
-				for( var s=1; s<numPages; s++ ) {
-
-					var lnk = document.links[i].cloneNode( true );
-					lnk.innerHTML = '[Seite #' + (s+1) + ']';
-					lnk.title = 'Seite #' + (s+1);
-					lnk.href=lnk.href.replace( /#comments$/, 'comment-page-' + (s+1) + '/#co	mments' );
-					document.links[i].parentNode.innerHTML += '&nbsp;|&nbsp;';
-					document.links[i].parentNode.appendChild( lnk );
-
-				}
-
-			}
-			
-*/
 
 		}
 	}
@@ -567,7 +544,6 @@ LawBlog.prototype.addCommentButtons = function() {
 			className = 'buttonAssignMarkup';
 		}
 		myButtonDiv.appendChild( myButton );
-		// document.getElementById( 'commentform' ).appendChild( myButton );
 
 	}
 
