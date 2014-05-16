@@ -321,14 +321,11 @@ LawBlog.prototype.foldArticles = function() {
 	for( var i=0; i<articles.length; i++ ) {
 		article = articles[i];
 		articleId = article.getAttribute( 'id' );
-
 		header	= article.getElementsByTagName( 'h1' )[0];
 		content = article.getElementsByTagName( 'div' )[0];
-
 		header.innerHTML = this.getToggleHTML( articleId ) + header.innerHTML;
 		content.setAttribute( 'id', this.getContentId( articleId ) );
 		this.toggleArticleVisibility( articleId );
-
 	}
 
 	return this;
